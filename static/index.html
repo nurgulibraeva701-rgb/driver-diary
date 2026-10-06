@@ -1,0 +1,101 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Дневник смен водителя</title>
+<style>
+:root{--bg:#f1f3f0;--card:#fff;--fg:#1c2a25;--mut:#7a8780;--g:#2f6b5a;--gl:#dfeae4;--line:#e8ece9;--err:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.3 -apple-system,system-ui,"Segoe UI",sans-serif}
+#app{max-width:430px;margin:0 auto;min-height:100vh;padding:20px 16px 100px}
+h1{font-size:28px;font-weight:500;margin:0}.sub{color:var(--mut);font-size:12px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+.ico{width:36px;height:36px;border-radius:12px;border:0;background:var(--card);color:var(--fg);font-size:18px;cursor:pointer;flex:none}
+.hero{background:var(--g);color:#fff;border-radius:20px;padding:16px 18px;margin-bottom:12px}
+.hero .row{display:flex;justify-content:space-between;font-size:12px;opacity:.85}
+.hero .big{font-size:42px;font-weight:600;margin:8px 0 10px}
+.hero.light{background:var(--gl);color:var(--g)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+.trio .card{margin:0;padding:12px}.trio b{display:block;font-size:17px;margin-top:6px}.trio span,.lbl{color:var(--mut);font-size:12px}
+.card h3{margin:0 0 10px;font-size:16px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.card h3 small{color:var(--g);font-weight:500;font-size:12px}
+.btn{width:100%;border:0;border-radius:14px;background:var(--g);color:#fff;padding:14px;font:600 15px inherit;font-family:inherit;cursor:pointer;margin-bottom:12px}
+.btn.soft{background:var(--gl);color:var(--g)}
+.bars{display:flex;gap:6px;align-items:flex-end;height:104px;margin-top:10px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;font-size:11px;color:var(--mut);cursor:pointer;max-width:40px}
+.bar i{width:100%;border-radius:6px;background:#c9d9d0}.bar.on i{background:var(--g)}.bar.on{color:var(--g);font-weight:600}
+.split{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line);margin:10px 0}.split i{background:var(--g)}.split u{background:#9fc2b2}
+.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}.kv .lbl{font-size:14px}
+.item{display:flex;align-items:center;gap:8px;padding:14px;background:var(--card);border-radius:14px;margin-bottom:8px;cursor:pointer}
+.item>div:first-child{flex:1}.item b{display:block;font-size:15px}.item .r{text-align:right}
+.trip{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}.trip:last-child{border:0}
+.trip .r{text-align:right}
+label{display:block;margin-bottom:10px;color:var(--mut);font-size:12px}
+input{width:100%;margin-top:4px;padding:11px;border-radius:12px;border:1px solid var(--line);background:#f4f6f4;color:var(--fg);font:16px inherit;font-family:inherit}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg{display:flex;background:#e6eae7;border-radius:12px;padding:3px;margin-bottom:12px}
+.seg label{flex:1;margin:0;text-align:center}.seg input{display:none}
+.seg span{display:block;padding:9px;border-radius:10px;font-size:14px;color:var(--mut)}
+.seg input:checked+span{background:#fff;color:var(--fg);font-weight:600}
+#msg{text-align:center;font-size:13px;min-height:18px;color:var(--g)}#msg.err{color:var(--err)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:8px 12px 14px}
+nav div{max-width:430px;margin:0 auto;display:flex;gap:6px}
+nav button{flex:1;border:0;background:none;border-radius:12px;padding:8px 0;color:var(--mut);font:11px inherit;font-family:inherit;cursor:pointer}
+nav button b{display:block;font-size:19px;font-weight:400}nav button.on{background:var(--gl);color:var(--g)}
+.empty{text-align:center;color:var(--mut);padding:24px 0}
+</style></head><body><div id="app"></div>
+<nav><div id="tabs"></div></nav>
+<script>
+const $=s=>document.querySelector(s),rub=n=>new Intl.NumberFormat('ru-RU').format(n)+' ₸';
+const MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const lab=d=>+d.slice(8)+' '+MON[+d.slice(5,7)-1],wd=d=>new Date(d+'T00:00:00Z').toLocaleDateString('ru-RU',{weekday:'short',timeZone:'UTC'});
+const pd=x=>new Date(String(x).replace(' ','T')),hm=x=>x.slice(11,16),rng=ts=>ts.length?hm(ts[0].start)+'–'+hm(ts.reduce((a,t)=>pd(t.end)>pd(a)?t.end:a,ts[0].end)):'',newId=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();
+const dur=ts=>{const m=Math.round(ts.reduce((a,t)=>a+(pd(t.end)-pd(t.start)||0),0)/6e4);return Math.floor(m/60)+' ч '+m%60+' мин'};
+const S={day:null,days:[],tab:'day',cache:{},id:newId()};
+const dayData=async d=>S.cache[d]??=await (await fetch('/api/trips?date='+d)).json();
+function go(n){const d=new Date(S.day+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);S.day=d.toISOString().slice(0,10);render()}
+function pick(d,tab){S.day=d;S.tab=tab||S.tab;render()}
+function head(title,back){return `<div class="top">${back?'<button class="ico" onclick="pick(S.day,\'hist\')">←</button>':''}<div style="flex:1"><h1>${title}</h1><div class="sub">${back?'Подробности дня':'Дневник смен водителя'}</div></div>`+
+ `<button class="ico" onclick="go(-1)">‹</button><button class="ico" onclick="go(1)">›</button></div>`}
+async function vDay(){
+  const j=await dayData(S.day),s=j.summary,mon=S.day.slice(0,7),md=S.days.filter(d=>d.startsWith(mon));
+  const ms=await Promise.all(md.map(dayData)),max=Math.max(1,...ms.map(x=>x.summary.net)),tot=ms.reduce((a,x)=>a+x.summary.net,0);
+  const cp=s.revenue?s.cash.amount/s.revenue*100:0;
+  return head(lab(S.day))+`<div class="hero"><div class="row"><span>● На руки</span><span>${wd(S.day)}, ${S.day.slice(0,4)}</span></div>
+  <div class="big">${rub(s.net)}</div><div class="row"><span>${s.trips} поездок</span><span>${dur(j.trips)} в пути</span></div></div>
+  <div class="trio"><div class="card"><span>Выручка</span><b>${rub(s.revenue)}</b></div><div class="card"><span>Комиссия</span><b>${rub(s.commission)}</b></div><div class="card"><span>Поездки</span><b>${s.trips}</b></div></div>
+  <button class="btn" onclick="pick(S.day,'detail')">Все поездки дня</button>
+  <div class="card"><h3>Оплата<small>${rub(s.revenue)}</small></h3><div class="split"><i style="width:${cp}%"></i><u style="width:${100-cp}%"></u></div>
+   <div class="kv"><span class="lbl">Наличные · ${s.cash.trips}</span><b>${rub(s.cash.amount)}</b></div><div class="kv"><span class="lbl">Карта · ${s.card.trips}</span><b>${rub(s.card.amount)}</b></div></div>
+  <div class="card"><h3>Доход за ${MONN[+mon.slice(5)-1].toLowerCase()}<small>на руки</small></h3><b style="font-size:24px">${rub(tot)}</b>
+   <div class="bars">${md.map((d,i)=>`<div class="bar${d===S.day?' on':''}" onclick="pick('${d}')"><i style="height:${Math.max(3,ms[i].summary.net/max*76)}px"></i>${+d.slice(8)}</div>`).join('')}</div></div>`}
+async function vDetail(){
+  const j=await dayData(S.day),s=j.summary;
+  return head(lab(S.day),1)+`<div class="hero light"><div class="row"><span>На руки</span><span>${s.trips} поездок · ${dur(j.trips)}</span></div><div class="big">${rub(s.net)}</div></div>
+  <div class="card"><h3>Поездки</h3>${j.trips.length?j.trips.map(t=>`<div class="trip"><div><b>${hm(t.start)}–${hm(t.end)}</b><div class="lbl">${t.payment==='cash'?'Наличные':'Карта'}</div></div><div class="r"><b>${rub(t.amount)}</b><div class="lbl">комиссия −${rub(t.commission)}</div></div></div>`).join(''):'<div class="empty">В этот день поездок нет</div>'}</div>
+  <div class="card"><div class="kv"><span class="lbl">Выручка</span><b>${rub(s.revenue)}</b></div><div class="kv"><span class="lbl">Комиссия</span><b>−${rub(s.commission)}</b></div></div>
+  <button class="btn soft" onclick="pick(S.day,'add')">Добавить поездку</button>`}
+async function vHist(){
+  const mon=S.day.slice(0,7),md=S.days.filter(d=>d.startsWith(mon)).reverse(),ms=await Promise.all(md.map(dayData));
+  const all=ms.flatMap(x=>x.trips),net=ms.reduce((a,x)=>a+x.summary.net,0);
+  return `<div class="top"><div style="flex:1"><h1>История</h1><div class="sub">Все дни и результаты</div></div></div>
+  <div class="card"><div class="lbl">Чистый доход за месяц · ${MONN[+mon.slice(5)-1]} ${mon.slice(0,4)}</div><div style="font-size:34px;font-weight:600;color:var(--g);margin:6px 0">${rub(net)}</div>
+  <div class="row" style="display:flex;justify-content:space-between" ><span class="lbl">${md.length} дн.</span><span class="lbl">${dur(all)}</span><span class="lbl">${all.length} поездок</span></div></div>`+
+  md.map((d,i)=>`<div class="item" onclick="pick('${d}','detail')"><div><b>${lab(d)}</b><span class="lbl">${rng(ms[i].trips)} · ${ms[i].summary.trips} поездок</span></div><div class="r"><b style="color:var(--g)">${rub(ms[i].summary.net)}</b><span class="lbl">${wd(d)}</span></div></div>`).join('')}
+function vAdd(){return `<div class="top"><div><h1>Новая поездка</h1><div class="sub">Часовой пояс по умолчанию +05:00</div></div></div>
+ <form id="f"><div class="card"><h3>Время</h3><div class="g2"><label>Начало<input type="datetime-local" name="start" required></label><label>Конец<input type="datetime-local" name="end" required></label></div>
+ <label>Часовой пояс<input name="tz" value="+05:00" pattern="[+-]\\d\\d:\\d\\d" required></label></div>
+ <div class="card"><h3>Деньги</h3><div class="g2"><label>Сумма, ₸<input type="number" name="amount" min="0.01" step="0.01" required></label><label>Комиссия, ₸<input type="number" name="commission" min="0" step="0.01" value="0" required></label></div></div>
+ <div class="seg"><label><input type="radio" name="payment" value="card" checked><span>Карта</span></label><label><input type="radio" name="payment" value="cash"><span>Наличные</span></label></div>
+ <button class="btn">Сохранить поездку</button><div id="msg"></div></form>`}
+async function render(){
+  $('#tabs').innerHTML=[['day','▭','Смена'],['add','＋','Добавить'],['hist','◷','История']].map(([k,i,t])=>`<button class="${(S.tab==='detail'?'hist':S.tab)===k?'on':''}" onclick="pick(S.day,'${k}')"><b>${i}</b>${t}</button>`).join('');
+  $('#app').innerHTML=S.tab==='add'?vAdd():await ({day:vDay,detail:vDetail,hist:vHist}[S.tab])();
+  if(S.tab==='add')$('#f').onsubmit=submit;window.scrollTo(0,0)}
+async function submit(e){e.preventDefault();const f=new FormData(e.target),tz=f.get('tz'),m=$('#msg');
+  const body={id:S.id,start:f.get('start')+':00'+tz,end:f.get('end')+':00'+tz,amount:+f.get('amount'),commission:+f.get('commission'),payment:f.get('payment')};
+  const r=await fetch('/api/trips',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),j=await r.json();
+  if(!r.ok){m.className='err';m.textContent=j.error;return}
+  S.id=newId();S.cache={};S.days=(await (await fetch('/api/days')).json()).days;S.day=body.start.slice(0,10);S.tab='day';render()}
+fetch('/api/days').then(r=>r.json()).then(j=>{S.days=j.days;S.day=j.days.at(-1)||new Date().toISOString().slice(0,10);render()});
+</script></body></html>
