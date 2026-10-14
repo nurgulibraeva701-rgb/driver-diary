@@ -2,6 +2,16 @@
 
 Сервер на Python 3.8+ (только стандартная библиотека) + веб-клиент (один HTML-файл). Ничего устанавливать не нужно.
 
+# Скрины 
+<img width="431" height="835" alt="Снимок экрана 2026-10-14 в 15 20 36" src="https://github.com/user-attachments/assets/faa47b48-4125-4591-a245-e88f7105ddcc" />  
+<img width="438" height="840" alt="Снимок экрана 2026-10-14 в 15 20 52" src="https://github.com/user-attachments/assets/d64d53bf-f818-46fd-9b99-76b039969b69" / >
+<img width="458" height="842" alt="Снимок экрана 2026-10-14 в 15 21 07" src="https://github.com/user-attachments/assets/4c55d300-9ba7-42d5-a417-6e0f4ec7c673" />
+
+
+
+
+
+
 ## Запуск
 ```
 python -m app.server        # http://localhost:8000  (другой порт: python -m app.server 9000)
